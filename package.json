@@ -1,9 +1,10 @@
 {
   "name": "hono-unm-api-prod",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "基于 Hono 的网易云解灰 API 服务",
   "type": "module",
   "main": "dist/server.js",
+  "packageManager": "pnpm@9.1.0",
   "scripts": {
     "dev": "bun --watch src/server.ts",
     "start": "node dist/server.js",
