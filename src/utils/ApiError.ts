@@ -14,18 +14,13 @@ export class ApiError extends Error {
     message: string,
     errors: ErrorDetail[] = [],
     isOperational = true,
-    stack = '',
   ) {
     super(message);
-    this.name = this.constructor.name; // 更准确的错误名称
+    this.name = this.constructor.name;
     this.statusCode = statusCode;
-    this.isOperational = isOperational;
-    this.errors = errors.length > 0 ? errors : [{ message }]; // 确保至少有一个错误信息
+    this.isOperational = isOperational; // 区分业务预期错误和未知系统错误
+    this.errors = errors.length > 0 ? errors : [{ message }];
 
-    if (stack) {
-      this.stack = stack;
-    } else {
-      Error.captureStackTrace(this, this.constructor);
-    }
+    // Error.captureStackTrace(this, this.constructor); // 在生产中通常省略以优化性能，除非需要详细堆栈
   }
 }
