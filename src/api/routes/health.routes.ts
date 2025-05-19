@@ -13,7 +13,7 @@ healthRouter.get('/healthz', (c) => {
       version: config.appVersion,
       environment: config.nodeEnv,
     },
-    '服务健康状态良好',
+    '服务健康',
   );
 });
 
