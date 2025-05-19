@@ -4,10 +4,10 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    '@hono/eslint-config',
+    'plugin:hono/recommended',
     'prettier',
   ],
-  plugins: ['@typescript-eslint', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier', 'hono'],
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
