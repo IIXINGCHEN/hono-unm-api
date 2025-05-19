@@ -1,20 +1,22 @@
 import pino from 'pino';
-import config from '@/config'; // 使用路径别名 @/
+import config from '@/config';
 
-const logger = pino({
+const pinoConfig: pino.LoggerOptions = {
   name: config.appName,
   level: config.logLevel,
-  transport:
-    config.nodeEnv === 'development'
-      ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
-            ignore: 'pid,hostname',
-          },
-        }
-      : undefined, // 生产环境直接输出 JSON
-});
+};
+
+if (config.nodeEnv === 'development') {
+  pinoConfig.transport = {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
+      ignore: 'pid,hostname,name', // name 在顶层已定义
+    },
+  };
+}
+
+const logger = pino(pinoConfig);
 
 export default logger;
