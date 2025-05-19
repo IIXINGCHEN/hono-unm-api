@@ -1,12 +1,13 @@
 module.exports = {
+  root: true,
   parser: '@typescript-eslint/parser',
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:hono/recommended',
+    '@hono/eslint-config',
     'prettier',
   ],
-  plugins: ['@typescript-eslint', 'prettier', 'hono'],
+  plugins: ['@typescript-eslint', 'prettier'],
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
@@ -23,5 +24,5 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
   },
-  ignorePatterns: ['node_modules/', 'dist/', '.eslintrc.js'],
+  ignorePatterns: ['node_modules/', 'dist/', '.eslintrc.js', 'prettier.config.js'],
 };
