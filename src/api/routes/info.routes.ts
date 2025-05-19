@@ -6,14 +6,17 @@ const infoRouter = new Hono();
 
 infoRouter.get('/info', (c) => {
   const infoData = {
+    application_name: config.appName,
     version: config.appVersion,
-    enable_flac: config.enableFlac,
-    node_env: config.nodeEnv,
-    allowed_origins: config.allowedOrigins,
-    external_api: config.externalMusicApiUrl,
-    // 可以添加更多希望公开的服务信息
+    environment: config.nodeEnv,
+    configuration: {
+        enable_flac: config.enableFlac,
+        allowed_origins_count: config.allowedOrigins.length,
+        proxy_enabled: !!config.proxyUrl,
+        external_api_configured: !!config.externalMusicApiUrl,
+    }
   };
-  return sendSuccess(c, infoData, '服务信息获取成功');
+  return sendSuccess(c, infoData, '服务信息');
 });
 
 export default infoRouter;
