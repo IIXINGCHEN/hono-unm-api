@@ -1,17 +1,12 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url'; // 用于 ES modules 获取 __dirname
-// @ts-ignore // process.env.npm_package_version 只有在 npm run 脚本时有效
+import { fileURLToPath } from 'url';
 import { version as pkgVersion } from '../../package.json';
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 根据 NODE_ENV 加载不同的 .env 文件，例如 .env.production, .env.development
-// 这里简化为只加载 .env，实际项目中可以扩展
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-
 
 interface AppConfig {
   appName: string;
@@ -24,25 +19,39 @@ interface AppConfig {
   externalMusicApiUrl: string;
   enableFlac: boolean;
   appVersion: string;
-  // jwtSecret?: string;
-  // jwtExpiresIn?: string;
 }
 
+const appNameFromEnv = process.env.APP_NAME;
+if (!appNameFromEnv) {
+  console.error('错误：环境变量 APP_NAME 未设置。');
+  process.exit(1);
+}
+
+const allowedOriginsFromEnv = process.env.ALLOWED_ORIGINS;
+if (!allowedOriginsFromEnv && process.env.NODE_ENV === 'production') {
+  console.warn('警告：生产环境中 ALLOWED_ORIGINS 未设置，CORS 可能不允许任何源。');
+}
+
+
 const config: AppConfig = {
-  appName: process.env.APP_NAME || 'hono-unm-api',
-  nodeEnv: (process.env.NODE_ENV as AppConfig['nodeEnv']) || 'development',
+  appName: appNameFromEnv,
+  nodeEnv: (process.env.NODE_ENV as AppConfig['nodeEnv']) || 'production',
   port: parseInt(process.env.PORT || '5678', 10),
   host: process.env.HOST || '0.0.0.0',
   logLevel: (process.env.LOG_LEVEL as AppConfig['logLevel']) || 'info',
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(origin => origin.trim()),
-  proxyUrl: process.env.PROXY_URL,
+  allowedOrigins: (allowedOriginsFromEnv || '').split(',').map(origin => origin.trim()).filter(Boolean),
+  proxyUrl: process.env.PROXY_URL || undefined,
   externalMusicApiUrl:
     process.env.EXTERNAL_MUSIC_API_URL ||
     'https://music-api.gdstudio.xyz/api.php',
   enableFlac: process.env.ENABLE_FLAC === 'true',
-  appVersion: process.env.APP_VERSION || pkgVersion || 'unknown',
-  // jwtSecret: process.env.JWT_SECRET,
-  // jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+  appVersion: process.env.APP_VERSION || pkgVersion || '1.0.0',
 };
+
+if (isNaN(config.port) || config.port <= 0 || config.port > 65535) {
+    console.error(`错误：无效的端口号配置: ${process.env.PORT}`);
+    process.exit(1);
+}
+
 
 export default config;
