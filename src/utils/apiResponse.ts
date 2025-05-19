@@ -1,18 +1,21 @@
 import { Context } from 'hono';
-import { StatusCode } from 'hono/utils/http-status'; // Hono 提供的 HTTP 状态码类型
+import { StatusCode } from 'hono/utils/http-status';
+import config from '@/config';
+import { ErrorDetail } from './ApiError';
+
 
 interface SuccessResponse<T> {
   success: true;
   message: string;
   data: T;
-  meta?: Record<string, unknown>; // 用于分页等元数据
+  meta?: Record<string, unknown>;
 }
 
 interface ErrorResponse {
   success: false;
   message: string;
-  errors?: { field?: string; message: string; code?: string }[];
-  stack?: string; // 仅开发环境
+  errors?: ErrorDetail[];
+  stack?: string;
 }
 
 export const sendSuccess = <T>(
@@ -35,21 +38,19 @@ export const sendSuccess = <T>(
 
 export const sendError = (
   c: Context,
-  error: any, // 可以是 ApiError 实例或普通 Error
+  error: any,
   defaultStatusCode: StatusCode = 500,
 ) => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = config.nodeEnv === 'development';
   let statusCode: StatusCode = defaultStatusCode;
   let message = '服务器发生内部错误，请稍后再试。';
   let responseErrors: ErrorResponse['errors'] | undefined = undefined;
 
-  if (error instanceof ApiError) {
+  if (error && typeof error.name === 'string' && error.name === 'ApiError') { // 检查 ApiError 实例
     statusCode = error.statusCode as StatusCode;
     message = error.message;
     responseErrors = error.errors;
-  } else if (error.name === 'ZodError' && error.errors) {
-    // 由 @hono/zod-validator 处理后，通常会被 Hono 的错误处理捕获
-    // 这里是备用，或者如果手动调用 Zod 解析
+  } else if (error && error.name === 'ZodError' && error.errors) {
     statusCode = 400;
     message = '请求参数验证失败。';
     responseErrors = error.errors.map((err: any) => ({
@@ -58,8 +59,12 @@ export const sendError = (
       code: err.code,
     }));
   } else if (error instanceof Error) {
-    message = error.message; // 开发模式下显示原始错误信息
+    if (isDevelopment) { // 开发模式下显示更详细的原始错误信息
+        message = error.message;
+    }
+    // 对非 ApiError 的其他错误，生产环境不直接暴露原始 message
   }
+
 
   const response: ErrorResponse = {
     success: false,
@@ -67,7 +72,7 @@ export const sendError = (
     errors: responseErrors,
   };
 
-  if (isDevelopment && error.stack) {
+  if (isDevelopment && error && error.stack) {
     response.stack = error.stack;
   }
 
