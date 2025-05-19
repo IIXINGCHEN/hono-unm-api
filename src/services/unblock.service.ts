@@ -10,20 +10,23 @@ const DEFAULT_SERVERS = [
 ];
 
 export const testMatchService = async (
-  songId: number | string = 1962165898,
+  songId: number | string = 1962165898, // 默认测试ID
 ): Promise<SongMatchData> => {
+  const childLogger = logger.child({ service: 'UnblockService', operation: 'testMatch', songId });
+  childLogger.info('开始测试匹配');
   try {
-    logger.info(`[UnblockService] 测试匹配歌曲 ID: ${songId}`);
-    // @ts-ignore: @unblockneteasemusic/server 类型定义可能不完整或不准确
+    // @ts-ignore: @unblockneteasemusic/server 的类型定义可能不完美
     const result: SongMatchData = await unblockMatch(songId, DEFAULT_SERVERS);
     if (!result || !result.url) {
+      childLogger.warn('未找到匹配');
       throw new ApiError(404, `测试 ID ${songId} 未找到匹配`);
     }
+    childLogger.info('测试匹配成功');
     return result;
   } catch (error: any) {
-    logger.error(error, `[UnblockService] testMatchService 错误 (ID: ${songId})`);
+    childLogger.error({ err: error }, '测试匹配服务发生错误');
     if (error instanceof ApiError) throw error;
-    throw new ApiError(500, `测试匹配歌曲失败: ${error.message || '未知错误'}`);
+    throw new ApiError(500, error.message || '测试匹配歌曲时发生未知错误');
   }
 };
 
@@ -31,29 +34,29 @@ export const findMatchService = async (
   id: string,
   clientServers?: string[],
 ): Promise<SongMatchData> => {
+  const childLogger = logger.child({ service: 'UnblockService', operation: 'findMatch', musicId: id });
   const serversToUse =
     clientServers && clientServers.length > 0 ? clientServers : DEFAULT_SERVERS;
-  logger.info(
-    `[UnblockService] 尝试匹配 ID: ${id}，使用源: ${serversToUse.join(', ')}`,
-  );
+  childLogger.info(`开始匹配，使用源: ${serversToUse.join(', ')}`);
 
   try {
-    // @ts-ignore: @unblockneteasemusic/server 类型定义可能不完整或不准确
+    // @ts-ignore: @unblockneteasemusic/server 的类型定义可能不完美
     const data: SongMatchData = await unblockMatch(id, serversToUse);
 
     if (!data || !data.url) {
-      throw new ApiError(404, `ID ${id} 未找到匹配`);
+      childLogger.warn('未找到匹配');
+      throw new ApiError(404, `ID ${id} 使用指定源未找到匹配`);
     }
 
-    if (config.proxyUrl && data.url && data.url.includes('kuwo.cn')) {
-      data.proxyUrl = `${config.proxyUrl.replace(/\/$/, '')}/${data.url.replace(/^http(s?):\/\//, '')}`;
-      logger.info(`[UnblockService] 应用代理: ${data.proxyUrl}`);
+    if (config.proxyUrl && data.url && data.url.includes('kuwo.cn')) { // 代理逻辑优化，更精确匹配
+      data.proxyUrl = `${config.proxyUrl.replace(/\/$/, '')}/${data.url.replace(/^https?:\/\//, '')}`;
+      childLogger.info({ proxyUrl: data.proxyUrl }, '已应用代理');
     }
-
+    childLogger.info('匹配成功');
     return data;
   } catch (error: any) {
-    logger.error(error, `[UnblockService] findMatchService 错误 (ID: ${id})`);
+    childLogger.error({ err: error }, '匹配服务发生错误');
     if (error instanceof ApiError) throw error;
-    throw new ApiError(500, `匹配 ID ${id} 失败: ${error.message || '未知错误'}`);
+    throw new ApiError(500, error.message || `匹配 ID ${id} 时发生未知错误`);
   }
 };
