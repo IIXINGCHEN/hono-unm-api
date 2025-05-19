@@ -1,5 +1,5 @@
 {
-  "name": "hono-unm-api-prod",
+  "name": "hono-unm-api",
   "version": "1.0.6",
   "description": "基于 Hono 的网易云解灰 API 服务",
   "type": "module",
