@@ -1,0 +1,13 @@
+{
+  "builds": [
+    {
+      "src": "dist/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "installCommand": "pnpm install --registry=https://registry.npmjs.org/",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "framework": null,
+  "nodeVersion": "18.x"
+}
