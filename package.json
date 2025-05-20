@@ -14,7 +14,7 @@
     "clean": "rm -rf dist",
     "prestart": "npm run build",
     "predev": "echo \"提示：开发模式推荐使用 Bun 以获得最佳实时重载体验，或根据需要调整脚本使用 ts-node-dev/nodemon。\"",
-    "install": "pnpm install --registry=https://registry.npmjs.org/" // Added registry for stability
+    "install": "pnpm install --registry=https://registry.npmjs.org/" 
   },
   "keywords": [
     "hono",
