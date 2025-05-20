@@ -9,5 +9,4 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "framework": null,
-  "nodeVersion": "18.x"
 }
