@@ -14,7 +14,7 @@ infoRouter.get('/info', (c) => {
       allowed_origins_count: config.allowedOrigins.length,
       proxy_enabled: !!config.proxyUrl,
       external_api_configured: !!config.externalMusicApiUrl,
-    }
+    },
   };
   return sendSuccess(c, infoData, '服务信息');
 });

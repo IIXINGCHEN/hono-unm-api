@@ -1,20 +1,175 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - 资源未找到</title>
+    <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
-        .status-code { font-size: 120px; font-weight: bold; color: #ff4d4f; margin: 0; line-height: 1; }
-        .message { font-size: 24px; color: #555; margin-top: 10px; margin-bottom: 30px; }
-        a { color: #1890ff; text-decoration: none; font-size: 16px; padding: 10px 20px; border: 1px solid #1890ff; border-radius: 4px; transition: background-color 0.3s, color 0.3s; }
-        a:hover { background-color: #1890ff; color: #fff; }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .error-container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            padding: 3rem;
+        }
+
+        .status-code {
+            font-size: 120px;
+            font-weight: 800;
+            color: var(--accent-primary);
+            margin: 0;
+            line-height: 1;
+            position: relative;
+            text-shadow: 0 0 20px rgba(255, 61, 113, 0.3);
+        }
+
+        .status-code::before {
+            content: '404';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: rgba(255, 61, 113, 0.1);
+            font-size: 180px;
+            z-index: -1;
+            transform: translateY(-20px);
+        }
+
+        .message {
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .error-details {
+            background-color: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--accent-primary);
+            text-align: left;
+        }
+
+        .error-details p {
+            margin-bottom: 0.5rem;
+        }
+
+        .error-details code {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent-secondary);
+            color: var(--accent-secondary);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(51, 102, 255, 0.1);
+        }
+
+        /* 动画效果 */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--accent-secondary);
+            top: 20%;
+            left: 10%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .square {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-primary);
+            bottom: 15%;
+            right: 10%;
+            transform: rotate(45deg);
+            animation: float 9s ease-in-out infinite;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid var(--accent-secondary);
+            top: 60%;
+            left: 20%;
+            animation: float 7s ease-in-out infinite;
+        }
     </style>
 </head>
+
 <body>
-    <div class="status-code">404</div>
-    <p class="message">抱歉，您所访问的页面不存在。</p>
-    <a href="/">返回首页</a>
+    <div class="floating-element circle"></div>
+    <div class="floating-element square"></div>
+    <div class="floating-element triangle"></div>
+
+    <div class="error-container">
+        <div class="status-code">404</div>
+        <p class="message">抱歉，您所访问的页面不存在。</p>
+
+        <div class="error-details">
+            <p><strong>可能的原因：</strong></p>
+            <ul>
+                <li>URL拼写错误</li>
+                <li>该页面已被移动或删除</li>
+                <li>您没有访问该资源的权限</li>
+            </ul>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/" class="btn">返回首页</a>
+            <a href="/static/api-test.html" class="btn btn-secondary">API测试页面</a>
+        </div>
+    </div>
+
+    <script src="/static/js/common.js"></script>
 </body>
+
 </html>

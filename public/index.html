@@ -1,26 +1,408 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNM API 服务</title>
+    <title>网易云解灰 API 服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background-color: #fff; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; max-width: 600px; }
-        h1 { color: #1890ff; margin-top: 0; margin-bottom: 10px; font-size: 28px; }
-        p { line-height: 1.7; color: #555; font-size: 16px; }
-        code { background-color: #eef; padding: 3px 6px; border-radius: 4px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace; font-size: 0.95em; }
-        .api-status { margin-top: 20px; padding: 10px; background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; color: #096dd9;}
+        body {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-secondary);
+        }
+
+        .api-endpoints {
+            margin-top: 3rem;
+        }
+
+        .endpoint-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .endpoint-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--accent-secondary);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .endpoint-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .endpoint-item h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .endpoint-item .method {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            background-color: var(--accent-secondary);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+
+        .endpoint-path {
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-primary);
+        }
+
+        .endpoint-description {
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .cta-section {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 61, 113, 0.1) 0%, transparent 50%, rgba(51, 102, 255, 0.1) 100%);
+            z-index: 0;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        /* 添加音乐波形动画 */
+        .wave-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            margin: 2rem 0;
+        }
+
+        .wave {
+            width: 5px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-secondary));
+            margin: 0 3px;
+            border-radius: 5px;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                height: 10px;
+            }
+
+            50% {
+                height: 40px;
+            }
+        }
+
+        .wave:nth-child(1) {
+            animation-delay: 0.0s;
+        }
+
+        .wave:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .wave:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .wave:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .wave:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        .wave:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        .wave:nth-child(7) {
+            animation-delay: 0.6s;
+        }
+
+        .wave:nth-child(8) {
+            animation-delay: 0.7s;
+        }
+
+        /* 添加状态指示器 */
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(0, 224, 150, 0.15);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .api-status::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 224, 150, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 224, 150, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 224, 150, 0);
+            }
+        }
+
+        /* 添加toast样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error-color);
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>UNM API 服务已启动</h1>
-        <p>本服务提供音乐解锁相关的 API 功能。</p>
-        <p>主要 API 端点位于 <code>/api/v1/</code> 路径下。</p>
-        <div class="api-status">
-            健康检查: <a href="/api/v1/health/healthz" target="_blank"><code>/api/v1/health/healthz</code></a>
-        </div>
+        <section class="hero">
+            <h1>网易云解灰 API 服务</h1>
+            <p>基于 Hono 构建的高性能音乐解锁 API 服务，提供网易云音乐解灰功能</p>
+
+            <div class="wave-container">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+
+            <div class="api-status">服务运行中</div>
+        </section>
+
+        <section class="features">
+            <div class="card feature-card">
+                <div class="icon">🚀</div>
+                <h2>高性能</h2>
+                <p>基于 Hono 框架构建，提供极速的 API 响应体验</p>
+            </div>
+
+            <div class="card feature-card">
+                <div class="icon">🔓</div>
+                <h2>音乐解锁</h2>
+                <p>解锁网易云音乐灰色歌曲，支持多种音源</p>
+            </div>
+
+            <div class="card feature-card">
+                <div class="icon">🔄</div>
+                <h2>多源匹配</h2>
+                <p>支持从多个音源匹配歌曲，提高解锁成功率</p>
+            </div>
+        </section>
+
+        <section class="api-endpoints">
+            <h2>API 端点</h2>
+            <ul class="endpoint-list">
+                <li class="endpoint-item">
+                    <h3><span class="method">GET</span> <span class="endpoint-path">/api/v1/health/healthz</span></h3>
+                    <div class="endpoint-description">健康检查接口，用于验证 API 服务是否正常运行</div>
+                </li>
+
+                <li class="endpoint-item">
+                    <h3><span class="method">GET</span> <span class="endpoint-path">/api/v1/info/info</span></h3>
+                    <div class="endpoint-description">获取服务信息，包括版本、环境和配置详情</div>
+                </li>
+
+                <li class="endpoint-item">
+                    <h3><span class="method">GET</span> <span class="endpoint-path">/api/v1/music/match</span></h3>
+                    <div class="endpoint-description">根据歌曲 ID 匹配可用的音源链接</div>
+                </li>
+
+                <li class="endpoint-item">
+                    <h3><span class="method">GET</span> <span class="endpoint-path">/api/v1/music/ncmget</span></h3>
+                    <div class="endpoint-description">获取网易云音乐歌曲链接，支持不同音质</div>
+                </li>
+
+                <li class="endpoint-item">
+                    <h3><span class="method">GET</span> <span class="endpoint-path">/api/v1/music/otherget</span></h3>
+                    <div class="endpoint-description">根据歌曲名称获取其他音源的歌曲链接</div>
+                </li>
+            </ul>
+        </section>
+
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2>开始使用</h2>
+                <p>立即体验网易云解灰 API 服务的强大功能</p>
+                <div class="cta-buttons">
+                    <a href="/api/v1/health/healthz" class="btn btn-secondary">健康检查</a>
+                </div>
+            </div>
+        </section>
     </div>
+
+    <script src="/static/js/common.js"></script>
 </body>
+
 </html>

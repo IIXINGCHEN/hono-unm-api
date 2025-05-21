@@ -26,7 +26,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "server.ts"
+    "server.ts",
+    "api/**/*.ts"
   ],
   "exclude": [
     "node_modules",

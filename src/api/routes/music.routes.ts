@@ -24,17 +24,21 @@ musicRouter.get('/test', async (c) => {
 
 musicRouter.get(
   '/match',
-  zValidator('query', matchQuerySchema, (result, c) => { // Zod 验证失败时的自定义处理
+  zValidator('query', matchQuerySchema, (result, c) => {
+    // Zod 验证失败时的自定义处理
     if (!result.success) {
-      return c.json({
-        success: false,
-        message: '请求参数验证失败。',
-        errors: result.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-          code: issue.code,
-        })),
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: '请求参数验证失败。',
+          errors: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
+          })),
+        },
+        400,
+      );
     }
   }),
   async (c) => {
@@ -48,15 +52,18 @@ musicRouter.get(
   '/ncmget',
   zValidator('query', ncmGetQuerySchema, (result, c) => {
     if (!result.success) {
-      return c.json({
-        success: false,
-        message: '请求参数验证失败。',
-        errors: result.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-          code: issue.code,
-        })),
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: '请求参数验证失败。',
+          errors: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
+          })),
+        },
+        400,
+      );
     }
   }),
   async (c) => {
@@ -70,15 +77,18 @@ musicRouter.get(
   '/otherget',
   zValidator('query', otherGetQuerySchema, (result, c) => {
     if (!result.success) {
-      return c.json({
-        success: false,
-        message: '请求参数验证失败。',
-        errors: result.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-          code: issue.code,
-        })),
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: '请求参数验证失败。',
+          errors: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
+          })),
+        },
+        400,
+      );
     }
   }),
   async (c) => {

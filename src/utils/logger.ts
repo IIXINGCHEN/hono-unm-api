@@ -7,7 +7,9 @@ const customLogger = {
     if (msg) {
       console.log(`[INFO] ${msg}`);
     } else {
-      console.log(`[INFO] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`);
+      console.log(
+        `[INFO] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`,
+      );
     }
     return customLogger;
   },
@@ -15,7 +17,9 @@ const customLogger = {
     if (msg) {
       console.log(`[WARN] ${msg}`);
     } else {
-      console.log(`[WARN] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`);
+      console.log(
+        `[WARN] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`,
+      );
     }
     return customLogger;
   },
@@ -23,7 +27,9 @@ const customLogger = {
     if (msg) {
       console.error(`[ERROR] ${msg}`);
     } else {
-      console.error(`[ERROR] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`);
+      console.error(
+        `[ERROR] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`,
+      );
     }
     return customLogger;
   },
@@ -32,7 +38,9 @@ const customLogger = {
       if (msg) {
         console.log(`[DEBUG] ${msg}`);
       } else {
-        console.log(`[DEBUG] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`);
+        console.log(
+          `[DEBUG] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`,
+        );
       }
     }
     return customLogger;
@@ -41,7 +49,9 @@ const customLogger = {
     if (msg) {
       console.error(`[FATAL] ${msg}`);
     } else {
-      console.error(`[FATAL] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`);
+      console.error(
+        `[FATAL] ${typeof obj === 'string' ? obj : JSON.stringify(obj)}`,
+      );
     }
     return customLogger;
   },
@@ -55,6 +65,7 @@ const pinoConfig: pino.LoggerOptions = {
 };
 
 // 根据环境选择日志器
-const logger = config.nodeEnv === 'development' ? customLogger : pino(pinoConfig);
+const logger =
+  config.nodeEnv === 'development' ? customLogger : pino(pinoConfig);
 
 export default logger;

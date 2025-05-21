@@ -3,7 +3,6 @@ import { StatusCode } from 'hono/utils/http-status';
 import config from '../config/index.js';
 import { ErrorDetail } from './ApiError.js';
 
-
 interface SuccessResponse<T> {
   success: true;
   message: string;
@@ -46,7 +45,8 @@ export const sendError = (
   let message = '服务器发生内部错误，请稍后再试。';
   let responseErrors: ErrorResponse['errors'] | undefined = undefined;
 
-  if (error && typeof error.name === 'string' && error.name === 'ApiError') { // 检查 ApiError 实例
+  if (error && typeof error.name === 'string' && error.name === 'ApiError') {
+    // 检查 ApiError 实例
     statusCode = error.statusCode as StatusCode;
     message = error.message;
     responseErrors = error.errors;
@@ -59,12 +59,12 @@ export const sendError = (
       code: err.code,
     }));
   } else if (error instanceof Error) {
-    if (isDevelopment) { // 开发模式下显示更详细的原始错误信息
+    if (isDevelopment) {
+      // 开发模式下显示更详细的原始错误信息
       message = error.message;
     }
     // 对非 ApiError 的其他错误，生产环境不直接暴露原始 message
   }
-
 
   const response: ErrorResponse = {
     success: false,

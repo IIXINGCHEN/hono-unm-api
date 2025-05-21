@@ -30,17 +30,21 @@ if (!appNameFromEnv) {
 
 const allowedOriginsFromEnv = process.env.ALLOWED_ORIGINS;
 if (!allowedOriginsFromEnv && process.env.NODE_ENV === 'production') {
-  console.warn('警告：生产环境中 ALLOWED_ORIGINS 未设置，CORS 可能不允许任何源。');
+  console.warn(
+    '警告：生产环境中 ALLOWED_ORIGINS 未设置，CORS 可能不允许任何源。',
+  );
 }
-
 
 const config: AppConfig = {
   appName: appNameFromEnv,
   nodeEnv: (process.env.NODE_ENV as AppConfig['nodeEnv']) || 'production',
   port: parseInt(process.env.PORT || '5678', 10),
-  host: process.env.HOST || '0.0.0.0',
+  host: process.env.HOST || '127.0.0.1',
   logLevel: (process.env.LOG_LEVEL as AppConfig['logLevel']) || 'info',
-  allowedOrigins: (allowedOriginsFromEnv || '').split(',').map(origin => origin.trim()).filter(Boolean),
+  allowedOrigins: (allowedOriginsFromEnv || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   proxyUrl: process.env.PROXY_URL || undefined,
   externalMusicApiUrl:
     process.env.EXTERNAL_MUSIC_API_URL ||
@@ -53,6 +57,5 @@ if (isNaN(config.port) || config.port <= 0 || config.port > 65535) {
   console.error(`错误：无效的端口号配置: ${process.env.PORT}`);
   process.exit(1);
 }
-
 
 export default config;

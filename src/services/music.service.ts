@@ -3,8 +3,17 @@ import logger from '../utils/logger.js';
 import { ApiError } from '../utils/ApiError.js';
 import type { NcmTrackUrlData, OtherSourceTrackData } from '../types/index.js';
 
-async function fetchExternalApi(url: URL, operationName: string, contextData: Record<string, any>) {
-  const childLogger = logger.child({ service: 'MusicService', operation: operationName, ...contextData, targetUrl: url.toString() });
+async function fetchExternalApi(
+  url: URL,
+  operationName: string,
+  contextData: Record<string, any>,
+) {
+  const childLogger = logger.child({
+    service: 'MusicService',
+    operation: operationName,
+    ...contextData,
+    targetUrl: url.toString(),
+  });
   childLogger.debug('开始请求外部 API');
 
   const response = await fetch(url.toString(), {
@@ -19,7 +28,10 @@ async function fetchExternalApi(url: URL, operationName: string, contextData: Re
     } catch (e) {
       childLogger.warn('读取外部API错误响应体失败');
     }
-    childLogger.error({ status: response.status, body: errorBody }, '外部 API 请求失败');
+    childLogger.error(
+      { status: response.status, body: errorBody },
+      '外部 API 请求失败',
+    );
     throw new ApiError(
       response.status,
       `外部 API 操作 '${operationName}' 失败: ${response.statusText}`,
@@ -36,7 +48,6 @@ async function fetchExternalApi(url: URL, operationName: string, contextData: Re
   }
 }
 
-
 export const getNcmTrackUrlService = async (
   id: string,
   br: string,
@@ -47,10 +58,16 @@ export const getNcmTrackUrlService = async (
   apiUrl.searchParams.append('id', id);
   apiUrl.searchParams.append('br', br);
 
-  const result = (await fetchExternalApi(apiUrl, operationName, { id, br })) as { url?: string;[key: string]: any };
+  const result = (await fetchExternalApi(apiUrl, operationName, {
+    id,
+    br,
+  })) as { url?: string; [key: string]: any };
 
   if (!result || !result.url) {
-    logger.warn({ operation: operationName, id, br, apiResult: result }, '未在外部 API 响应中找到 NCM 歌曲链接');
+    logger.warn(
+      { operation: operationName, id, br, apiResult: result },
+      '未在外部 API 响应中找到 NCM 歌曲链接',
+    );
     throw new ApiError(404, '未在外部 API 响应中找到 NCM 歌曲链接');
   }
 
@@ -58,7 +75,10 @@ export const getNcmTrackUrlService = async (
 
   if (config.proxyUrl && trackData.url && trackData.url.includes('kuwo.cn')) {
     trackData.proxyUrl = `${config.proxyUrl.replace(/\/$/, '')}/${trackData.url.replace(/^https?:\/\//, '')}`;
-    logger.info({ operation: operationName, proxyUrl: trackData.proxyUrl }, '已应用代理');
+    logger.info(
+      { operation: operationName, proxyUrl: trackData.proxyUrl },
+      '已应用代理',
+    );
   }
 
   return trackData;
@@ -75,7 +95,9 @@ export const getOtherSourceTrackUrlService = async (
   searchApiUrl.searchParams.append('count', '1');
   searchApiUrl.searchParams.append('pages', '1');
 
-  const searchResult = (await fetchExternalApi(searchApiUrl, searchOperation, { name })) as any[];
+  const searchResult = (await fetchExternalApi(searchApiUrl, searchOperation, {
+    name,
+  })) as any[];
 
   if (
     !Array.isArray(searchResult) ||
@@ -83,12 +105,17 @@ export const getOtherSourceTrackUrlService = async (
     !searchResult[0] ||
     !searchResult[0].url_id
   ) {
-    logger.warn({ operation: searchOperation, name, apiResult: searchResult }, '未在搜索结果中找到歌曲 ID');
+    logger.warn(
+      { operation: searchOperation, name, apiResult: searchResult },
+      '未在搜索结果中找到歌曲 ID',
+    );
     throw new ApiError(404, `歌曲 '${name}' 未从指定源找到`);
   }
   const trackSourceId = searchResult[0].url_id as string;
-  logger.info({ operation: searchOperation, name, foundId: trackSourceId }, '已找到歌曲源 ID');
-
+  logger.info(
+    { operation: searchOperation, name, foundId: trackSourceId },
+    '已找到歌曲源 ID',
+  );
 
   const getUrlOperation = 'getUrlForOtherSourceTrack';
   const idUrlApi = new URL(config.externalMusicApiUrl);
@@ -97,18 +124,34 @@ export const getOtherSourceTrackUrlService = async (
   idUrlApi.searchParams.append('id', trackSourceId);
   idUrlApi.searchParams.append('br', '999');
 
-  const urlResult = (await fetchExternalApi(idUrlApi, getUrlOperation, { sourceId: trackSourceId })) as { url?: string;[key: string]: any };
+  const urlResult = (await fetchExternalApi(idUrlApi, getUrlOperation, {
+    sourceId: trackSourceId,
+  })) as { url?: string; [key: string]: any };
 
   if (!urlResult || !urlResult.url) {
-    logger.warn({ operation: getUrlOperation, sourceId: trackSourceId, apiResult: urlResult }, '未在外部 API 响应中找到歌曲链接');
+    logger.warn(
+      {
+        operation: getUrlOperation,
+        sourceId: trackSourceId,
+        apiResult: urlResult,
+      },
+      '未在外部 API 响应中找到歌曲链接',
+    );
     throw new ApiError(404, '搜索后未从外部 API 获取到歌曲链接');
   }
 
-  const trackData: OtherSourceTrackData = { name, sourceId: trackSourceId, url: urlResult.url };
+  const trackData: OtherSourceTrackData = {
+    name,
+    sourceId: trackSourceId,
+    url: urlResult.url,
+  };
 
   if (config.proxyUrl && trackData.url && trackData.url.includes('kuwo.cn')) {
     trackData.proxyUrl = `${config.proxyUrl.replace(/\/$/, '')}/${trackData.url.replace(/^https?:\/\//, '')}`;
-    logger.info({ operation: getUrlOperation, proxyUrl: trackData.proxyUrl }, '已应用代理');
+    logger.info(
+      { operation: getUrlOperation, proxyUrl: trackData.proxyUrl },
+      '已应用代理',
+    );
   }
   return trackData;
 };

@@ -21,24 +21,69 @@ if (config.allowedOrigins.length > 0) {
     cors({
       origin: config.allowedOrigins,
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+      allowHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+      ],
       credentials: true,
       maxAge: 86400,
     }),
   );
 } else if (config.nodeEnv === 'production') {
-  logger.warn('CORS ALLOWED_ORIGINS 未配置，所有跨域请求将被默认策略拒绝（除非浏览器同源）。');
+  logger.warn(
+    'CORS ALLOWED_ORIGINS 未配置，所有跨域请求将被默认策略拒绝（除非浏览器同源）。',
+  );
 }
-
 
 if (config.nodeEnv === 'development') {
-  app.use('*', honoLoggerMiddleware((message: string, ...rest: string[]) => {
-    logger.info({ honoLog: { message, rest } }, 'Hono Request Log');
-  }));
+  app.use(
+    '*',
+    honoLoggerMiddleware((message: string, ...rest: string[]) => {
+      logger.info({ honoLog: { message, rest } }, 'Hono Request Log');
+    }),
+  );
 }
 
-app.use('/static/*', serveStatic({ root: './public/' }));
-app.get('/', serveStatic({ path: './public/index.html' }));
+// 在非 Vercel 环境中处理静态文件
+// Vercel 环境中静态文件由 vercel.json 中的路由配置处理
+if (process.env.VERCEL !== '1') {
+  // 自定义中间件来处理静态文件
+  app.use('/static/*', async (c, next) => {
+    const url = new URL(c.req.url);
+    const path = url.pathname.replace('/static/', '');
+
+    // 设置正确的Content-Type
+    if (path.endsWith('.css')) {
+      c.header('Content-Type', 'text/css');
+    } else if (path.endsWith('.js')) {
+      c.header('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.html')) {
+      c.header('Content-Type', 'text/html');
+    } else if (path.endsWith('.png')) {
+      c.header('Content-Type', 'image/png');
+    } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      c.header('Content-Type', 'image/jpeg');
+    } else if (path.endsWith('.gif')) {
+      c.header('Content-Type', 'image/gif');
+    } else if (path.endsWith('.svg')) {
+      c.header('Content-Type', 'image/svg+xml');
+    } else if (path.endsWith('.ico')) {
+      c.header('Content-Type', 'image/x-icon');
+    } else if (path.endsWith('.json')) {
+      c.header('Content-Type', 'application/json');
+    }
+
+    // 修改：直接映射到public目录，不保留/static/前缀
+    return serveStatic({ root: './public', path })(c, next);
+  });
+
+  app.get('/', async (c) => {
+    c.header('Content-Type', 'text/html');
+    return serveStatic({ path: './public/index.html' })(c, async () => { });
+  });
+}
 
 app.route('/api/v1', apiV1Router);
 
@@ -54,7 +99,11 @@ app.onError((err, c) => {
       // 修改为直接返回Response对象
       return c.html('404 Not Found', 404);
     }
-    return sendError(c, new ApiError(err.status, err.message), err.status as any);
+    return sendError(
+      c,
+      new ApiError(err.status, err.message),
+      err.status as any,
+    );
   }
 
   if (err instanceof ApiError) {

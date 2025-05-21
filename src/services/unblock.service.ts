@@ -5,14 +5,25 @@ import { ApiError } from '../utils/ApiError.js';
 import type { SongMatchData } from '../types/index.js';
 
 const DEFAULT_SERVERS = [
-  'pyncmd', 'kuwo', 'bilibili', 'migu', 'kugou', 'qq',
-  'youtube', 'youtube-dl', 'yt-dlp',
+  'pyncmd',
+  'kuwo',
+  'bilibili',
+  'migu',
+  'kugou',
+  'qq',
+  'youtube',
+  'youtube-dl',
+  'yt-dlp',
 ];
 
 export const testMatchService = async (
   songId: number | string = 1962165898, // 默认测试ID
 ): Promise<SongMatchData> => {
-  const childLogger = logger.child({ service: 'UnblockService', operation: 'testMatch', songId });
+  const childLogger = logger.child({
+    service: 'UnblockService',
+    operation: 'testMatch',
+    songId,
+  });
   childLogger.info('开始测试匹配');
   try {
     // @ts-ignore: @unblockneteasemusic/server 的类型定义可能不完美
@@ -34,7 +45,11 @@ export const findMatchService = async (
   id: string,
   clientServers?: string[],
 ): Promise<SongMatchData> => {
-  const childLogger = logger.child({ service: 'UnblockService', operation: 'findMatch', musicId: id });
+  const childLogger = logger.child({
+    service: 'UnblockService',
+    operation: 'findMatch',
+    musicId: id,
+  });
   const serversToUse =
     clientServers && clientServers.length > 0 ? clientServers : DEFAULT_SERVERS;
   childLogger.info(`开始匹配，使用源: ${serversToUse.join(', ')}`);
@@ -48,7 +63,8 @@ export const findMatchService = async (
       throw new ApiError(404, `ID ${id} 使用指定源未找到匹配`);
     }
 
-    if (config.proxyUrl && data.url && data.url.includes('kuwo.cn')) { // 代理逻辑优化，更精确匹配
+    if (config.proxyUrl && data.url && data.url.includes('kuwo.cn')) {
+      // 代理逻辑优化，更精确匹配
       data.proxyUrl = `${config.proxyUrl.replace(/\/$/, '')}/${data.url.replace(/^https?:\/\//, '')}`;
       childLogger.info({ proxyUrl: data.proxyUrl }, '已应用代理');
     }
