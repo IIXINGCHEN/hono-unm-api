@@ -12,6 +12,17 @@ import { securityMiddleware } from './middleware/security.js';
 
 const app = new Hono();
 
+// 添加全局中间件，确保所有响应都有正确的Content-Type和字符集
+app.use('*', async (c, next) => {
+  await next();
+  // 检查Content-Type头
+  const contentType = c.res.headers.get('Content-Type');
+  if (contentType && contentType.includes('application/json') && !contentType.includes('charset=utf-8')) {
+    // 如果是JSON但没有指定字符集，添加UTF-8字符集
+    c.res.headers.set('Content-Type', 'application/json; charset=utf-8');
+  }
+});
+
 // 应用安全中间件
 securityMiddleware.forEach(middleware => {
   app.use('*', middleware);

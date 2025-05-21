@@ -32,6 +32,7 @@ export const sendSuccess = <T>(
   if (meta) {
     response.meta = meta;
   }
+  // 使用c.json，但确保设置正确的Content-Type
   c.header('Content-Type', 'application/json; charset=utf-8');
   return c.json(response, statusCode as any);
 };
@@ -77,6 +78,7 @@ export const sendError = (
     response.stack = error.stack;
   }
 
+  // 使用c.json，但确保设置正确的Content-Type
   c.header('Content-Type', 'application/json; charset=utf-8');
   return c.json(response, statusCode as any);
 };
