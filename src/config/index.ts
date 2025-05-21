@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { version as pkgVersion } from '../../package.json';
+// 使用硬编码的版本号，避免JSON导入问题
+const pkgVersion = '1.0.6';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,8 +50,8 @@ const config: AppConfig = {
 };
 
 if (isNaN(config.port) || config.port <= 0 || config.port > 65535) {
-    console.error(`错误：无效的端口号配置: ${process.env.PORT}`);
-    process.exit(1);
+  console.error(`错误：无效的端口号配置: ${process.env.PORT}`);
+  process.exit(1);
 }
 
 

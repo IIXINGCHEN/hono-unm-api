@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { sendSuccess } from '@/utils/apiResponse';
-import config from '@/config';
+import { sendSuccess } from '../../utils/apiResponse.js';
+import config from '../../config/index.js';
 
 const healthRouter = new Hono();
 

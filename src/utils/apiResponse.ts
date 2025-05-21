@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { StatusCode } from 'hono/utils/http-status';
-import config from '@/config';
-import { ErrorDetail } from './ApiError';
+import config from '../config/index.js';
+import { ErrorDetail } from './ApiError.js';
 
 
 interface SuccessResponse<T> {
@@ -33,7 +33,7 @@ export const sendSuccess = <T>(
   if (meta) {
     response.meta = meta;
   }
-  return c.json(response, statusCode);
+  return c.json(response, statusCode as any);
 };
 
 export const sendError = (
@@ -60,7 +60,7 @@ export const sendError = (
     }));
   } else if (error instanceof Error) {
     if (isDevelopment) { // 开发模式下显示更详细的原始错误信息
-        message = error.message;
+      message = error.message;
     }
     // 对非 ApiError 的其他错误，生产环境不直接暴露原始 message
   }
@@ -76,5 +76,5 @@ export const sendError = (
     response.stack = error.stack;
   }
 
-  return c.json(response, statusCode);
+  return c.json(response, statusCode as any);
 };

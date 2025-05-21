@@ -2,9 +2,9 @@ import { serve } from '@hono/node-server';
 import { inspect } from 'util';
 import net from 'net';
 
-import app from '@/app';
-import config from '@/config';
-import logger from '@/utils/logger';
+import app from './src/app.js';
+import config from './src/config/index.js';
+import logger from './src/utils/logger.js';
 
 const checkPort = (port: number, host: string): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -63,7 +63,7 @@ const startServer = async () => {
     },
   );
 
-  const优雅关闭 = (signal: string) => {
+  const gracefulShutdown = (signal: string) => {
     logger.info(`接收到 ${signal} 信号，开始优雅关闭...`);
     serverInstance.close((err) => {
       if (err) {
@@ -76,8 +76,8 @@ const startServer = async () => {
     });
   };
 
-  process.on('SIGINT', () => 优雅关闭('SIGINT'));
-  process.on('SIGTERM', () => 优雅关闭('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
   process.on('unhandledRejection', (reason, promise) => {
     logger.fatal(

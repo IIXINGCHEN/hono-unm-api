@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import healthRouter from './health.routes';
-import infoRouter from './info.routes';
-import musicRouter from './music.routes';
+import healthRouter from './health.routes.js';
+import infoRouter from './info.routes.js';
+import musicRouter from './music.routes.js';
 
 const apiV1Router = new Hono();
 

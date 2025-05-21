@@ -1,8 +1,8 @@
 import unblockMatch from '@unblockneteasemusic/server';
-import config from '@/config';
-import logger from '@/utils/logger';
-import { ApiError } from '@/utils/ApiError';
-import type { SongMatchData } from '@/types';
+import config from '../config/index.js';
+import logger from '../utils/logger.js';
+import { ApiError } from '../utils/ApiError.js';
+import type { SongMatchData } from '../types/index.js';
 
 const DEFAULT_SERVERS = [
   'pyncmd', 'kuwo', 'bilibili', 'migu', 'kugou', 'qq',

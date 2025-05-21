@@ -3,17 +3,17 @@ import { zValidator } from '@hono/zod-validator';
 import {
   getNcmTrackUrlService,
   getOtherSourceTrackUrlService,
-} from '@/services/music.service';
+} from '../../services/music.service.js';
 import {
   findMatchService,
   testMatchService,
-} from '@/services/unblock.service';
+} from '../../services/unblock.service.js';
 import {
   matchQuerySchema,
   ncmGetQuerySchema,
   otherGetQuerySchema,
-} from '@/api/validators/music.validators';
-import { sendSuccess } from '@/utils/apiResponse';
+} from '../validators/music.validators.js';
+import { sendSuccess } from '../../utils/apiResponse.js';
 
 const musicRouter = new Hono();
 
@@ -30,9 +30,9 @@ musicRouter.get(
         success: false,
         message: '请求参数验证失败。',
         errors: result.error.issues.map(issue => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-            code: issue.code,
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code,
         })),
       }, 400);
     }
@@ -52,9 +52,9 @@ musicRouter.get(
         success: false,
         message: '请求参数验证失败。',
         errors: result.error.issues.map(issue => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-            code: issue.code,
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code,
         })),
       }, 400);
     }
@@ -74,9 +74,9 @@ musicRouter.get(
         success: false,
         message: '请求参数验证失败。',
         errors: result.error.issues.map(issue => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-            code: issue.code,
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code,
         })),
       }, 400);
     }

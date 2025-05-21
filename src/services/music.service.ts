@@ -1,12 +1,12 @@
-import config from '@/config';
-import logger from '@/utils/logger';
-import { ApiError } from '@/utils/ApiError';
-import type { NcmTrackUrlData, OtherSourceTrackData } from '@/types';
+import config from '../config/index.js';
+import logger from '../utils/logger.js';
+import { ApiError } from '../utils/ApiError.js';
+import type { NcmTrackUrlData, OtherSourceTrackData } from '../types/index.js';
 
 async function fetchExternalApi(url: URL, operationName: string, contextData: Record<string, any>) {
   const childLogger = logger.child({ service: 'MusicService', operation: operationName, ...contextData, targetUrl: url.toString() });
   childLogger.debug('开始请求外部 API');
-  
+
   const response = await fetch(url.toString(), {
     // 可以添加超时、请求头等配置
     signal: AbortSignal.timeout(10000), // 10秒超时
@@ -15,9 +15,9 @@ async function fetchExternalApi(url: URL, operationName: string, contextData: Re
   if (!response.ok) {
     let errorBody = '无法读取响应体';
     try {
-        errorBody = await response.text();
+      errorBody = await response.text();
     } catch (e) {
-        childLogger.warn('读取外部API错误响应体失败');
+      childLogger.warn('读取外部API错误响应体失败');
     }
     childLogger.error({ status: response.status, body: errorBody }, '外部 API 请求失败');
     throw new ApiError(
@@ -25,7 +25,7 @@ async function fetchExternalApi(url: URL, operationName: string, contextData: Re
       `外部 API 操作 '${operationName}' 失败: ${response.statusText}`,
     );
   }
-  
+
   try {
     const jsonData = await response.json();
     childLogger.debug('外部 API 响应成功并解析为 JSON');
@@ -47,7 +47,7 @@ export const getNcmTrackUrlService = async (
   apiUrl.searchParams.append('id', id);
   apiUrl.searchParams.append('br', br);
 
-  const result = (await fetchExternalApi(apiUrl, operationName, { id, br })) as { url?: string; [key: string]: any };
+  const result = (await fetchExternalApi(apiUrl, operationName, { id, br })) as { url?: string;[key: string]: any };
 
   if (!result || !result.url) {
     logger.warn({ operation: operationName, id, br, apiResult: result }, '未在外部 API 响应中找到 NCM 歌曲链接');
@@ -97,7 +97,7 @@ export const getOtherSourceTrackUrlService = async (
   idUrlApi.searchParams.append('id', trackSourceId);
   idUrlApi.searchParams.append('br', '999');
 
-  const urlResult = (await fetchExternalApi(idUrlApi, getUrlOperation, { sourceId: trackSourceId })) as { url?: string; [key: string]: any };
+  const urlResult = (await fetchExternalApi(idUrlApi, getUrlOperation, { sourceId: trackSourceId })) as { url?: string;[key: string]: any };
 
   if (!urlResult || !urlResult.url) {
     logger.warn({ operation: getUrlOperation, sourceId: trackSourceId, apiResult: urlResult }, '未在外部 API 响应中找到歌曲链接');
