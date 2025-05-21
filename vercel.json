@@ -36,7 +36,7 @@
   "buildCommand": "pnpm build",
   "framework": null,
   "env": {
-    "APP_NAME": "hono-unm-api-prod",
+    "APP_NAME": "hono-unm-api",
     "NODE_ENV": "production",
     "PORT": "3000",
     "HOST": "0.0.0.0",
