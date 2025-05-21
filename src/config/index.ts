@@ -22,10 +22,10 @@ interface AppConfig {
   appVersion: string;
 }
 
-const appNameFromEnv = process.env.APP_NAME;
-if (!appNameFromEnv) {
-  console.error('错误：环境变量 APP_NAME 未设置。');
-  process.exit(1);
+// 使用默认值，避免在环境变量缺失时退出
+const appNameFromEnv = process.env.APP_NAME || 'hono-unm-api-prod';
+if (!appNameFromEnv && process.env.NODE_ENV === 'development') {
+  console.warn('警告：环境变量 APP_NAME 未设置，使用默认值。');
 }
 
 const allowedOriginsFromEnv = process.env.ALLOWED_ORIGINS;
@@ -53,9 +53,10 @@ const config: AppConfig = {
   appVersion: process.env.APP_VERSION || pkgVersion || '1.0.0',
 };
 
+// 验证端口号，如果无效则使用默认值 5678
 if (isNaN(config.port) || config.port <= 0 || config.port > 65535) {
-  console.error(`错误：无效的端口号配置: ${process.env.PORT}`);
-  process.exit(1);
+  console.warn(`警告：无效的端口号配置: ${process.env.PORT}，使用默认值 5678`);
+  config.port = 5678;
 }
 
 export default config;

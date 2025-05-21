@@ -34,5 +34,15 @@
   ],
   "installCommand": "pnpm install --registry=https://registry.npmjs.org/",
   "buildCommand": "pnpm build",
-  "framework": null
+  "framework": null,
+  "env": {
+    "APP_NAME": "hono-unm-api-prod",
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "HOST": "0.0.0.0",
+    "LOG_LEVEL": "info",
+    "ALLOWED_ORIGINS": "*",
+    "ENABLE_FLAC": "true",
+    "EXTERNAL_MUSIC_API_URL": "https://music-api.gdstudio.xyz/api.php"
+  }
 }
