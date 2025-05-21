@@ -8,12 +8,18 @@
   "scripts": {
     "dev": "tsc && node --experimental-specifier-resolution=node dist/server.js",
     "start": "node dist/server.js",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json --skipLibCheck",
+    "build:vercel": "tsc --project tsconfig.json --skipLibCheck",
     "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
     "clean": "rm -rf dist",
-    "prestart": "npm run build",
-    "predev": "echo \"使用 ts-node-dev 启动开发服务器\""
+    "prestart": "pnpm run build",
+    "predev": "echo \"使用 ts-node-dev 启动开发服务器\"",
+    "security": "pnpm audit --audit-level=moderate",
+    "security:fix": "pnpm audit fix",
+    "_prebuild": "pnpm run security",
+    "deps:check": "npx npm-check-updates",
+    "deps:update": "npx npm-check-updates -u && pnpm install"
   },
   "keywords": [
     "hono",

@@ -1,7 +1,5 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { cors } from 'hono/cors';
-import { secureHeaders } from 'hono/secure-headers';
 import { logger as honoLoggerMiddleware } from 'hono/logger';
 import { serveStatic } from '@hono/node-server/serve-static';
 
@@ -10,28 +8,17 @@ import logger from './utils/logger.js';
 import apiV1Router from './api/routes/index.js';
 import { sendError } from './utils/apiResponse.js';
 import { ApiError } from './utils/ApiError.js';
+import { securityMiddleware } from './middleware/security.js';
 
 const app = new Hono();
 
-app.use('*', secureHeaders());
+// 应用安全中间件
+securityMiddleware.forEach(middleware => {
+  app.use('*', middleware);
+});
 
-if (config.allowedOrigins.length > 0) {
-  app.use(
-    '*',
-    cors({
-      origin: config.allowedOrigins,
-      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
-        'Accept',
-      ],
-      credentials: true,
-      maxAge: 86400,
-    }),
-  );
-} else if (config.nodeEnv === 'production') {
+// 生产环境CORS警告
+if (config.allowedOrigins.length === 0 && config.nodeEnv === 'production') {
   logger.warn(
     'CORS ALLOWED_ORIGINS 未配置，所有跨域请求将被默认策略拒绝（除非浏览器同源）。',
   );
@@ -56,11 +43,11 @@ if (process.env.VERCEL !== '1') {
 
     // 设置正确的Content-Type
     if (path.endsWith('.css')) {
-      c.header('Content-Type', 'text/css');
+      c.header('Content-Type', 'text/css; charset=utf-8');
     } else if (path.endsWith('.js')) {
-      c.header('Content-Type', 'application/javascript');
+      c.header('Content-Type', 'application/javascript; charset=utf-8');
     } else if (path.endsWith('.html')) {
-      c.header('Content-Type', 'text/html');
+      c.header('Content-Type', 'text/html; charset=utf-8');
     } else if (path.endsWith('.png')) {
       c.header('Content-Type', 'image/png');
     } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
@@ -72,7 +59,7 @@ if (process.env.VERCEL !== '1') {
     } else if (path.endsWith('.ico')) {
       c.header('Content-Type', 'image/x-icon');
     } else if (path.endsWith('.json')) {
-      c.header('Content-Type', 'application/json');
+      c.header('Content-Type', 'application/json; charset=utf-8');
     }
 
     // 修改：直接映射到public目录，不保留/static/前缀
@@ -80,7 +67,7 @@ if (process.env.VERCEL !== '1') {
   });
 
   app.get('/', async (c) => {
-    c.header('Content-Type', 'text/html');
+    c.header('Content-Type', 'text/html; charset=utf-8');
     return serveStatic({ path: './public/index.html' })(c, async () => { });
   });
 }
@@ -97,6 +84,7 @@ app.onError((err, c) => {
     logger.warn({ err, ...requestInfo }, 'Hono HTTPException 捕获');
     if (err.status === 404 && c.req.header('accept')?.includes('text/html')) {
       // 修改为直接返回Response对象
+      c.header('Content-Type', 'text/html; charset=utf-8');
       return c.html('404 Not Found', 404);
     }
     return sendError(
@@ -124,8 +112,10 @@ app.notFound((c) => {
   logger.info({ path: c.req.path }, '请求的资源未找到 (404)');
   if (c.req.header('accept')?.includes('text/html')) {
     // 修改为直接返回HTML响应
+    c.header('Content-Type', 'text/html; charset=utf-8');
     return c.html('404 Not Found', 404);
   }
+  c.header('Content-Type', 'application/json; charset=utf-8');
   return c.json({ success: false, message: '请求的资源未找到。' }, 404);
 });
 

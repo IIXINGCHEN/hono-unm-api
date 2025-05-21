@@ -8,43 +8,78 @@ async function fetchExternalApi(
   operationName: string,
   contextData: Record<string, any>,
 ) {
+  // 不记录完整URL，避免泄露查询参数
   const childLogger = logger.child({
     service: 'MusicService',
     operation: operationName,
     ...contextData,
-    targetUrl: url.toString(),
+    targetHost: url.hostname,
+    targetPath: url.pathname,
   });
   childLogger.debug('开始请求外部 API');
 
-  const response = await fetch(url.toString(), {
-    // 可以添加超时、请求头等配置
-    signal: AbortSignal.timeout(10000), // 10秒超时
-  });
-
-  if (!response.ok) {
-    let errorBody = '无法读取响应体';
-    try {
-      errorBody = await response.text();
-    } catch (e) {
-      childLogger.warn('读取外部API错误响应体失败');
-    }
-    childLogger.error(
-      { status: response.status, body: errorBody },
-      '外部 API 请求失败',
-    );
-    throw new ApiError(
-      response.status,
-      `外部 API 操作 '${operationName}' 失败: ${response.statusText}`,
-    );
-  }
-
   try {
-    const jsonData = await response.json();
-    childLogger.debug('外部 API 响应成功并解析为 JSON');
-    return jsonData;
+    // 添加更多安全头和超时设置
+    const response = await fetch(url.toString(), {
+      signal: AbortSignal.timeout(10000), // 10秒超时
+      headers: {
+        'User-Agent': `${config.appName}/${config.appVersion}`,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Requested-By': config.appName,
+      },
+    });
+
+    if (!response.ok) {
+      let errorBody = '无法读取响应体';
+      try {
+        errorBody = await response.text();
+        // 清洗错误响应，避免记录可能的敏感信息
+        errorBody = errorBody.length > 100 ? errorBody.substring(0, 100) + '...' : errorBody;
+      } catch (e) {
+        childLogger.warn('读取外部API错误响应体失败');
+      }
+      childLogger.error(
+        { status: response.status, errorSummary: errorBody.substring(0, 100) },
+        '外部 API 请求失败',
+      );
+      throw new ApiError(
+        response.status,
+        `外部 API 操作 '${operationName}' 失败: ${response.statusText}`,
+      );
+    }
+
+    // 验证响应内容类型
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+      childLogger.warn({ contentType }, '外部API返回非JSON内容');
+      throw new ApiError(500, `外部 API 返回了非预期的内容类型: ${contentType}`);
+    }
+
+    try {
+      const jsonData = await response.json();
+
+      // 验证响应数据结构
+      if (!jsonData || typeof jsonData !== 'object') {
+        throw new ApiError(500, '外部 API 返回了无效的数据结构');
+      }
+
+      childLogger.debug('外部 API 响应成功并解析为 JSON');
+      return jsonData;
+    } catch (error: any) {
+      childLogger.error({ err: error }, '解析外部 API 响应 JSON 失败');
+      throw new ApiError(500, `解析外部 API 响应失败: ${error.message}`);
+    }
   } catch (error: any) {
-    childLogger.error({ err: error }, '解析外部 API 响应 JSON 失败');
-    throw new ApiError(500, `解析外部 API 响应失败: ${error.message}`);
+    if (error instanceof ApiError) throw error;
+
+    if (error.name === 'AbortError') {
+      childLogger.error({ timeout: '10s' }, '外部 API 请求超时');
+      throw new ApiError(504, '外部 API 请求超时');
+    }
+
+    childLogger.error({ err: error }, '外部 API 请求失败');
+    throw new ApiError(500, `外部 API 请求失败: ${error.message}`);
   }
 }
 
@@ -61,7 +96,7 @@ export const getNcmTrackUrlService = async (
   const result = (await fetchExternalApi(apiUrl, operationName, {
     id,
     br,
-  })) as { url?: string; [key: string]: any };
+  })) as { url?: string;[key: string]: any };
 
   if (!result || !result.url) {
     logger.warn(
@@ -126,7 +161,7 @@ export const getOtherSourceTrackUrlService = async (
 
   const urlResult = (await fetchExternalApi(idUrlApi, getUrlOperation, {
     sourceId: trackSourceId,
-  })) as { url?: string; [key: string]: any };
+  })) as { url?: string;[key: string]: any };
 
   if (!urlResult || !urlResult.url) {
     logger.warn(
