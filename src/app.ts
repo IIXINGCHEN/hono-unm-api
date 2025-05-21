@@ -9,8 +9,16 @@ import apiV1Router from './api/routes/index.js';
 import { sendError } from './utils/apiResponse.js';
 import { ApiError } from './utils/ApiError.js';
 import { securityMiddleware } from './middleware/security.js';
+import { enhancedCorsMiddleware, domainVerificationMiddleware } from './middleware/cors.middleware.js';
+import { apiKeyAuthMiddleware } from './middleware/auth.middleware.js';
+import { InitManager } from './services/initManager.js';
 
 const app = new Hono();
+
+// 初始化各种服务
+InitManager.initialize(config).catch(error => {
+  logger.error({ err: error }, '初始化服务失败');
+});
 
 // 添加全局中间件，确保所有响应都有正确的Content-Type和字符集
 app.use('*', async (c, next) => {
@@ -23,10 +31,49 @@ app.use('*', async (c, next) => {
   }
 });
 
-// 应用安全中间件
-securityMiddleware.forEach(middleware => {
-  app.use('*', middleware);
-});
+// 应用增强的CORS中间件（替代原有的CORS中间件）
+app.use('*', enhancedCorsMiddleware());
+
+// 应用其他安全中间件（除了CORS中间件）
+securityMiddleware
+  .filter(middleware => !middleware.toString().includes('cors('))
+  .forEach(middleware => {
+    app.use('*', middleware);
+  });
+
+// 应用域名验证中间件
+app.use('*', domainVerificationMiddleware());
+
+// 如果启用了API密钥验证，应用API密钥验证中间件
+if (config.apiKeyEnabled) {
+  // 获取需要API密钥的路径
+  const requiredPaths = config.apiKeyRequiredPaths.length > 0
+    ? config.apiKeyRequiredPaths
+    : ['/api/v1/music/*'];
+
+  // 应用API密钥验证中间件
+  app.use('/api/v1/*', apiKeyAuthMiddleware({
+    required: false, // 默认不要求API密钥，仅对特定路径要求
+    validateSignature: config.apiKeySignatureRequired,
+    excludePaths: [
+      '/api/v1/health/*',
+      '/api/v1/info/*',
+      '/api/v1/auth/keys/verify',
+    ],
+  }));
+
+  // 对特定路径应用严格的API密钥验证
+  requiredPaths.forEach(path => {
+    app.use(path, apiKeyAuthMiddleware({
+      required: true,
+      validateSignature: config.apiKeySignatureRequired,
+    }));
+  });
+
+  logger.info(`API密钥验证已启用，需要API密钥的路径: ${requiredPaths.join(', ')}`);
+} else {
+  logger.info('API密钥验证已禁用');
+}
 
 // 生产环境CORS警告
 if (config.allowedOrigins.length === 0 && config.nodeEnv === 'production') {

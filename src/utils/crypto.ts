@@ -8,22 +8,26 @@ const IV_LENGTH = 16;
 /**
  * 加密文本数据
  * @param text 要加密的文本
+ * @param key 可选的加密密钥，如果未提供则使用默认密钥
  * @returns 加密后的文本（格式：iv:加密数据）
  */
-export function encrypt(text: string): string {
+export function encrypt(text: string, key?: string): string {
+  // 使用提供的密钥或默认密钥
+  const encryptionKey = key || ENCRYPTION_KEY;
+
   // 生成随机初始化向量
   const iv = crypto.randomBytes(IV_LENGTH);
   // 创建加密器
   const cipher = crypto.createCipheriv(
     'aes-256-cbc',
-    Buffer.from(ENCRYPTION_KEY.padEnd(32).slice(0, 32)), // 确保密钥长度为32字节
+    Buffer.from(encryptionKey.padEnd(32).slice(0, 32)), // 确保密钥长度为32字节
     iv
   );
-  
+
   // 加密数据
   let encrypted = cipher.update(text, 'utf8');
   encrypted = Buffer.concat([encrypted, cipher.final()]);
-  
+
   // 返回格式：iv:加密数据（都是十六进制字符串）
   return iv.toString('hex') + ':' + encrypted.toString('hex');
 }
@@ -31,30 +35,34 @@ export function encrypt(text: string): string {
 /**
  * 解密文本数据
  * @param text 加密的文本（格式：iv:加密数据）
+ * @param key 可选的解密密钥，如果未提供则使用默认密钥
  * @returns 解密后的原始文本
  */
-export function decrypt(text: string): string {
+export function decrypt(text: string, key?: string): string {
   try {
+    // 使用提供的密钥或默认密钥
+    const encryptionKey = key || ENCRYPTION_KEY;
+
     // 分离初始化向量和加密数据
     const textParts = text.split(':');
     if (textParts.length !== 2) {
       throw new Error('加密文本格式无效');
     }
-    
+
     const iv = Buffer.from(textParts[0], 'hex');
     const encryptedText = Buffer.from(textParts[1], 'hex');
-    
+
     // 创建解密器
     const decipher = crypto.createDecipheriv(
       'aes-256-cbc',
-      Buffer.from(ENCRYPTION_KEY.padEnd(32).slice(0, 32)), // 确保密钥长度为32字节
+      Buffer.from(encryptionKey.padEnd(32).slice(0, 32)), // 确保密钥长度为32字节
       iv
     );
-    
+
     // 解密数据
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
-    
+
     // 返回解密后的文本
     return decrypted.toString('utf8');
   } catch (error) {

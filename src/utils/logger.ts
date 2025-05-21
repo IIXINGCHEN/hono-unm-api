@@ -134,11 +134,23 @@ const pinoConfig: pino.LoggerOptions = {
       }
       return method.apply(this, args);
     }
+  },
+  // 使用 pino-pretty 格式化日志输出，解决中文乱码问题
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+    }
   }
 };
 
+// 检查是否强制使用格式化的日志输出
+const forcePrettyLogs = process.env.FORCE_PRETTY_LOGS === 'true';
+
 // 根据环境选择日志器
 const logger =
-  config.nodeEnv === 'development' ? customLogger : pino(pinoConfig);
+  config.nodeEnv === 'development' || forcePrettyLogs ? customLogger : pino(pinoConfig);
 
 export default logger;

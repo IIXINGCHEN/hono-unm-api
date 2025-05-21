@@ -9,7 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 加载环境变量
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// 如果通过命令行参数指定了环境文件，则使用该文件
+// 否则使用默认的 .env 文件
+const envFile = process.env.ENV_FILE || '.env';
+dotenv.config({ path: path.resolve(__dirname, `../../../${envFile}`) });
 
 // 扩展配置接口，添加安全相关配置
 interface AppConfig {
@@ -29,6 +32,28 @@ interface AppConfig {
   encryptionKey?: string;
   jwtSecret?: string;
   enableStrictCsp: boolean;
+  // API密钥相关配置
+  apiKeyEnabled: boolean;
+  apiKeyRequiredPaths: string[];
+  apiKeySignatureRequired: boolean;
+  apiKeySignatureExpiryMs: number;
+
+  // 存储相关配置
+  storageType: string;
+  storagePath: string;
+
+  // 缓存相关配置
+  cacheType: string;
+  cacheTtl: number;
+
+  // 监控相关配置
+  monitorEnabled: boolean;
+  alertEnabled: boolean;
+  alertWebhookUrl?: string;
+
+  // 权限相关配置
+  permissionEnabled: boolean;
+  defaultRole: string;
 }
 
 // 定义环境变量验证模式
@@ -62,6 +87,33 @@ const envSchema = z.object({
   ENCRYPTION_KEY: z.string().optional(),
   JWT_SECRET: z.string().optional(),
   ENABLE_STRICT_CSP: z.enum(['true', 'false']).default('true'),
+
+  // API密钥相关配置
+  API_KEY_ENABLED: z.enum(['true', 'false']).default('true'),
+  API_KEY_REQUIRED_PATHS: z.string().default('/api/v1/music/*'),
+  API_KEY_SIGNATURE_REQUIRED: z.enum(['true', 'false']).default('false'),
+  API_KEY_SIGNATURE_EXPIRY_MS: z.string()
+    .transform(val => parseInt(val, 10))
+    .default('300000'), // 默认5分钟
+
+  // 存储相关配置
+  STORAGE_TYPE: z.enum(['file', 'sqlite', 'memory']).default('file'),
+  STORAGE_PATH: z.string().default('./data'),
+
+  // 缓存相关配置
+  CACHE_TYPE: z.enum(['memory', 'redis', 'none']).default('memory'),
+  CACHE_TTL: z.string()
+    .transform(val => parseInt(val, 10))
+    .default('300'), // 默认5分钟
+
+  // 监控相关配置
+  MONITOR_ENABLED: z.enum(['true', 'false']).default('true'),
+  ALERT_ENABLED: z.enum(['true', 'false']).default('false'),
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
+
+  // 权限相关配置
+  PERMISSION_ENABLED: z.enum(['true', 'false']).default('true'),
+  DEFAULT_ROLE: z.string().default('read')
 });
 
 // 验证环境变量
@@ -102,6 +154,12 @@ const allowedOrigins = (validatedEnv.ALLOWED_ORIGINS || '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+// 解析API密钥必需路径
+const apiKeyRequiredPaths = (validatedEnv.API_KEY_REQUIRED_PATHS || '')
+  .split(',')
+  .map((path) => path.trim())
+  .filter(Boolean);
+
 // 创建配置对象
 const config: AppConfig = {
   appName: validatedEnv.APP_NAME,
@@ -120,6 +178,24 @@ const config: AppConfig = {
   encryptionKey: validatedEnv.ENCRYPTION_KEY,
   jwtSecret: validatedEnv.JWT_SECRET,
   enableStrictCsp: validatedEnv.ENABLE_STRICT_CSP === 'true',
+  // API密钥相关配置
+  apiKeyEnabled: validatedEnv.API_KEY_ENABLED === 'true',
+  apiKeyRequiredPaths,
+  apiKeySignatureRequired: validatedEnv.API_KEY_SIGNATURE_REQUIRED === 'true',
+  apiKeySignatureExpiryMs: validatedEnv.API_KEY_SIGNATURE_EXPIRY_MS,
+  // 存储相关配置
+  storageType: validatedEnv.STORAGE_TYPE,
+  storagePath: validatedEnv.STORAGE_PATH,
+  // 缓存相关配置
+  cacheType: validatedEnv.CACHE_TYPE,
+  cacheTtl: validatedEnv.CACHE_TTL,
+  // 监控相关配置
+  monitorEnabled: validatedEnv.MONITOR_ENABLED === 'true',
+  alertEnabled: validatedEnv.ALERT_ENABLED === 'true',
+  alertWebhookUrl: validatedEnv.ALERT_WEBHOOK_URL,
+  // 权限相关配置
+  permissionEnabled: validatedEnv.PERMISSION_ENABLED === 'true',
+  defaultRole: validatedEnv.DEFAULT_ROLE,
 };
 
 export default config;

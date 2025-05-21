@@ -5,6 +5,7 @@ import net from 'net';
 import app from './src/app.js';
 import config from './src/config/index.js';
 import logger from './src/utils/logger.js';
+import { InitManager } from './src/services/initManager.js';
 
 const checkPort = (port: number, host: string): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -63,21 +64,40 @@ const startServer = async () => {
     },
   );
 
-  const gracefulShutdown = (signal: string) => {
+  const gracefulShutdown = async (signal: string) => {
     logger.info(`接收到 ${signal} 信号，开始优雅关闭...`);
-    serverInstance.close((err) => {
-      if (err) {
-        logger.error({ err }, '服务器关闭期间发生错误');
-        process.exit(1);
-      }
-      logger.info('服务器已成功关闭。');
-      // 在这里可以添加其他清理逻辑，例如关闭数据库连接
-      process.exit(0);
-    });
+
+    try {
+      // 关闭所有服务
+      await InitManager.shutdown();
+
+      serverInstance.close((err) => {
+        if (err) {
+          logger.error({ err }, '服务器关闭期间发生错误');
+          process.exit(1);
+        }
+        logger.info('服务器已成功关闭。');
+        process.exit(0);
+      });
+    } catch (error) {
+      logger.error({ err: error }, '关闭服务失败');
+      process.exit(1);
+    }
   };
 
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => {
+    gracefulShutdown('SIGINT').catch(error => {
+      logger.error({ err: error }, '处理 SIGINT 信号时发生错误');
+      process.exit(1);
+    });
+  });
+
+  process.on('SIGTERM', () => {
+    gracefulShutdown('SIGTERM').catch(error => {
+      logger.error({ err: error }, '处理 SIGTERM 信号时发生错误');
+      process.exit(1);
+    });
+  });
 
   process.on('unhandledRejection', (reason, promise) => {
     logger.fatal(
